@@ -95,12 +95,6 @@ Promise.any(
 
 ```
 
-To dispose a command when no longer used:
-
-```js
-commandManager.unsuscribe('myApp/random');
-```
-
 Sample
 --------------
 You can find ([a proof of concept](http://codepen.io/seraphzz/pen/oHdJD) on Codepen.io.
