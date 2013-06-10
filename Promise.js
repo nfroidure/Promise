@@ -1,13 +1,23 @@
-// AMD stuff
-(function (root, factory) {
-	if (typeof define === 'function' && define.amd) {
-		// AMD. Register
-		define('Promise', [], factory);
+// UMD stuff : Browser + RequireJS + Node
+(function (root, moduleName, deps, factory) {
+	if (typeof exports === 'object') {
+	// Node. Does not work with strict CommonJS, but
+	// only CommonJS-like enviroments that support module.exports,
+	// like Node.
+	module.exports = factory.apply(root,deps.map(function(dep) {
+		return require(dep);
+	}));
+	} else if (typeof define === 'function' && define.amd) {
+		// AMD. Register as a 'moduleName' named module.
+		define(deps, factory);
 	} else {
 		// Browser globals
-		root.Promise = factory();
+		root[moduleName] = factory.apply(root,deps.map(function(dep) {
+			return root[dep];
+		}));
 	}
-})(this, function () {
+})(this, 'Promise', [], function () {
+
 	// Promise constructor
 	var AWAIT=0, SUCCESS=1, FAIL=-1;
 	function Promise(logic) {
@@ -143,6 +153,10 @@
 			},time);
 			return function() { clearTimeout(timeout); };
 		});
+	};
+
+	Promise.dumb=function () {
+		return new Promise(function(success, error) {});
 	};
 
 return Promise;
