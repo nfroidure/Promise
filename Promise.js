@@ -71,7 +71,8 @@
 		var failLogic=function() {
 			if(fail)
 				returnValue=fail(promise.error);
-			thenFail&&thenFail(returnValue.error);
+			thenFail&&thenFail(returnValue&&returnValue.error?
+				returnValue.error:returnValue);
 		};
 		if(AWAIT===this.solved) {
 			this.successCallback=successLogic;
@@ -157,6 +158,10 @@
 
 	Promise.dumb=function () {
 		return new Promise(function(success, error) {});
+	};
+
+	Promise.sure=function () {
+		return new Promise(function(success, error) { success(); });
 	};
 
 return Promise;
