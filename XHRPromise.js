@@ -16,7 +16,7 @@
 			return root[dep];
 		}));
 	}
-})(this, 'XHRPromise', ['Promise'], function (Promise) {
+})(this, 'XHRPromise', ['./Promise'], function (Promise) {
 
 	// XHRPromise constructor
 	function XHRPromise(method,url,data,async) {

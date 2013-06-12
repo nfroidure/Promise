@@ -89,6 +89,12 @@ Promise.any(
 	});
 
 // to do
+// Promise that n promises will be succefully fullfilled
+Promise.some(n,
+		new XHRPromise('GET','/path.json'),
+		new XHRPromise('GET','/path2.json'),
+		new XHRPromise('GET','/path3.json')
+	);
 // Promise that all promises will be fullfilled (include errors): Promise.full
 // Promise that on of the promises will be fullfilled (include errors): Promise.?
 // Promise that all promises will be completed sequentially: Promise.seq
