@@ -51,7 +51,7 @@
 	Promise.prototype.then = function(success, fail, progress) {
 		var thenSuccess, thenFail, thenProgress, returnValue, promise=this;
 		var thenDispose=function() {
-			promise.dispose&&promise.dispose();
+			promise.solved===AWAIT&&promise.dispose&&promise.dispose();
 		;}
 		var thenPromise=new Promise(function(success,fail,progress) {
 			thenSuccess=success;
