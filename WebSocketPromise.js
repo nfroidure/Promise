@@ -29,21 +29,15 @@
 			var ws = new WebSocket(protocol+'://'+hostname+':'+port);
 			var closeSuccess;
 			ws.onopen=function() {
-				// Giving the ws object and a promise of close
-				success({'ws':ws, 'closePromise': new Promise(function(success,error){
-					closeSuccess=success;
-					closeError=error;
-				})});
+				// Giving the ws object
+				success(ws);
 			};
-			ws.onclose=function() {
-				closeSuccess&&closeSuccess();				
+			ws.onclose=function() {			
 				dispose();
 			};
 			ws.onerror=function(e) {
 				if(ws.readyState===WebSocket.CONNECTING)
 					error(e);
-				else
-					closeError(e);
 				dispose();
 			};
 			var dispose=function() {
@@ -56,13 +50,35 @@
 
 	WebSocketPromise.prototype=Object.create(Promise.prototype);
 
+	WebSocketPromise.getClosePromise=function(ws) {
+		return new Promise(function(success,error) {
+			var closeHandler=function(event) {
+				success(event);
+				dispose();
+			};
+			var errorHandler=function(event) {
+				if(ws.readyState!==WebSocket.CONNECTING)
+					error(event);
+				dispose();
+			};
+			ws.addEventListener('close', closeHandler);
+			ws.addEventListener('error', errorHandler);
+			var dispose=function() {
+				ws.removeEventListener('close', closeHandler);
+				ws.removeEventListener('error', errorHandler);
+			};
+			return dispose;
+		});
+	};
+
 	WebSocketPromise.getMessagePromise=function(ws,type) {
 		return new Promise(function(success,error) {
 			var msgHandler=function(event) {
 				var msgContent;
-				if(event&&event.message) {
-					msgContent=JSON.parse(event.message);
-					if(msgContent.type&&msgContent.type=type) {
+				console.log(event.data)
+				if(event&&event.data) {
+					msgContent=JSON.parse(event.data);
+					if(msgContent.type&&msgContent.type==type) {
 						success(msgContent);
 						dispose();
 					}
