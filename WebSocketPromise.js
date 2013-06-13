@@ -79,8 +79,8 @@
 				if(event&&event.data) {
 					msgContent=JSON.parse(event.data);
 					if(msgContent.type&&msgContent.type==type) {
-						success(msgContent);
 						dispose();
+						success(msgContent);
 					}
 				}
 			};

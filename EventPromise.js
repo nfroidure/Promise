@@ -31,8 +31,8 @@
 			var eventHandler=function(event) {
 				iterations--;
 				if(iterations<1) {
+					dispose();
 					success(event);
-				dispose();
 				}
 			};
 			var dispose=function() {

@@ -31,8 +31,11 @@
 			xhr.open(method, url, async);
 			xhr.onprogress = progress;
 			xhr.onload = function(event) {
+				dispose();
 				if(0!==(''+xhr.status).indexOf('5'))
 					success(xhr);
+				else
+					error(xhr);
 			};
 			xhr.onerror = error;
 			xhr.send(data);
