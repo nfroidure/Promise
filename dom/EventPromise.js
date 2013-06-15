@@ -16,7 +16,7 @@
 			return root[dep];
 		}));
 	}
-})(this, 'XHRPromise', ['./Promise'], function (Promise) {
+})(this, 'XHRPromise', ['./../Promise'], function (Promise) {
 
 	// Event promise constructor
 	function EventPromise(type, element, capture, iterations) {

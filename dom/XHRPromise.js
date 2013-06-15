@@ -16,7 +16,7 @@
 			return root[dep];
 		}));
 	}
-})(this, 'XHRPromise', ['./Promise'], function (Promise) {
+})(this, 'XHRPromise', ['./../Promise'], function (Promise) {
 
 	// XHRPromise constructor
 	function XHRPromise(method,url,data,async) {
@@ -31,7 +31,7 @@
 			xhr.open(method, url, async);
 			xhr.onprogress = progress;
 			xhr.onload = function(event) {
-				dispose();
+				xhr.onload=xhr.onprogress=xhr.onerror=null;
 				if(0!==(''+xhr.status).indexOf('5'))
 					success(xhr);
 				else

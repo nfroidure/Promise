@@ -16,7 +16,7 @@
 			return root[dep];
 		}));
 	}
-})(this, 'WebSocketPromise', ['./Promise'], function (Promise) {
+})(this, 'WebSocketPromise', ['./../Promise'], function (Promise) {
 
 	// WebSocketPromise constructor
 	function WebSocketPromise(protocol,hostname,port) {
@@ -75,7 +75,6 @@
 		return new Promise(function(success,error) {
 			var msgHandler=function(event) {
 				var msgContent;
-				console.log(event.data)
 				if(event&&event.data) {
 					msgContent=JSON.parse(event.data);
 					if(msgContent.type&&msgContent.type==type) {
