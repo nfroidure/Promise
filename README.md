@@ -111,4 +111,5 @@ Promise.seq(2,
 
 Sample
 --------------
-You can find ([a proof of concept](http://codepen.io/seraphzz/pen/oHdJD) on Codepen.io.
+You can find [a proof of concept](http://codepen.io/seraphzz/pen/oHdJD) on Codepen.io,
+	[Liar](https://github.com/nfroidure/Liar) is a game based on this lib you can look at.
