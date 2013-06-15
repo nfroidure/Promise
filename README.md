@@ -95,10 +95,17 @@ Promise.some(2,
 		new XHRPromise('GET','/path3.json')
 	);
 
+// Return a sequential resolution chain of the promises given as arguments
+// /!\ will not execute promises sequentially
+Promise.seq(2,
+		new XHRPromise('GET','/path.json'),
+		new XHRPromise('GET','/path2.json'),
+		new XHRPromise('GET','/path3.json')
+	);
+
 // to do
 // Promise that all promises will be completed (include errors): Promise.full
 // Promise that one of the promises will be completed (include errors): Promise.?
-// Promise that all promises will be fullfilled sequentially: Promise.seq
 
 ```
 

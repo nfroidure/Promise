@@ -152,6 +152,19 @@
 			});
 	};
 
+	Promise.seq=fucntion(){
+		if(arguments.length<2)
+			throw Error('Promise.seq must have at least 2 Promises as arguments.');
+		var lastPromise=arguments[0];
+		for(var i=1, j=arguments.length, i<j; i++;) {
+			lastPromise.then(function() {
+				return arguments[i];
+			});
+			lastPromise=arguments;
+		}
+		return arguments[0];
+	}
+
 	// Promise generators
 	Promise.elapsed=function(time) {
 		return new Promise(function(success, error) {
