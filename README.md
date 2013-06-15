@@ -88,16 +88,17 @@ Promise.any(
 		console.log(value);
 	});
 
-// to do
-// Promise that n promises will be succefully fullfilled
-Promise.some(n,
+// Promise that at least 2 promises will be succefully fullfilled
+Promise.some(2,
 		new XHRPromise('GET','/path.json'),
 		new XHRPromise('GET','/path2.json'),
 		new XHRPromise('GET','/path3.json')
 	);
-// Promise that all promises will be fullfilled (include errors): Promise.full
-// Promise that on of the promises will be fullfilled (include errors): Promise.?
-// Promise that all promises will be completed sequentially: Promise.seq
+
+// to do
+// Promise that all promises will be completed (include errors): Promise.full
+// Promise that one of the promises will be completed (include errors): Promise.?
+// Promise that all promises will be fullfilled sequentially: Promise.seq
 
 ```
 

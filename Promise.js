@@ -86,10 +86,19 @@
 		return thenPromise;
 	};
 
-	Promise.all=function () {
-		var promises=Array.prototype.slice.call(arguments,0),
+	// Promise compositions
+	Promise.some=function(n) {
+		if((!n)||(n<0))
+			throw Error('n must be superior or equal to 0');
+		if(arguments.length<2)
+			throw Error('Promise.some wait a least 2 arguments.');
+		if(n>arguments.length-1)
+			n=arguments.length-1;
+		var promises=Array.prototype.slice.call(arguments,1),
 			solved=0,
-			returnValues=new Array(promises.length);
+			rejected=0,
+			returnValues=new Array(promises.length),
+			returnErrors=new Array(promises.length);
 		return new Promise(function(successCallback,errorCallback) {
 			var promiseDispose=function() {
 				promises.forEach(function(p) {
@@ -101,16 +110,17 @@
 					if(solved<promises.length) {
 						returnValues[index]=value;
 						solved++;
-						if(solved==promises.length)
+						if(solved==n)
 							successCallback(returnValues);
 					}
 				}
 			};
 			var promiseError=function(promise,index) {
 				return function(error) {
-					if(solved<promises.length) {
-						errorCallback(error);
-					solved=promises.length;
+					rejected++;
+					returnErrors[index]=error;
+					if(solved+rejected==promises.length) {
+						errorCallback(returnErrors);
 					}
 				}
 			};
@@ -122,31 +132,28 @@
 		});
 	};
 
-	Promise.any=function () {
-		var promises=Array.prototype.slice.call(arguments,0);
-		var errors=0;
-		return new Promise(function(successCallback,errorCallback) {
-			var promiseDispose=function() {
-				promises.forEach(function(p) {
-					AWAIT===p.solved&&p.dispose&&p.dispose();
-				});
-			};
-			var promiseSuccess=function(value) {
-				promiseDispose();
-				successCallback(value);
-			};
-			var promiseError=function(error) {
-				if(++errors===promises.length)
-					errorCallback(error);
-			};
-			promises.forEach(function(promise,index){
-				promise.then(promiseSuccess,promiseError);
-			});
-			return promiseDispose;
-		});
+	Promise.all=Promise.every=function() {
+		if(arguments.length<2)
+			throw Error('Promise.all must have at least 2 Promises as arguments.');
+		return Promise.some.apply(this,[arguments.length]
+			.concat(Array.prototype.slice.call(arguments,0)));
 	};
 
-	Promise.elapsed=function (time) {
+	Promise.any=function() {
+		return Promise.some.apply(this,[1]
+			.concat(Array.prototype.slice.call(arguments,0)))
+			.then(function(results){
+				for(var i=0, j=results.length; i<j; i++)
+					if(results[i]!==undefined) {
+						return Promise.fullfill(results[i]);
+					}
+			},function(errors){
+				return Promise.reject(errors);
+			});
+	};
+
+	// Promise generators
+	Promise.elapsed=function(time) {
 		return new Promise(function(success, error) {
 			var timestamp=Date.now();
 			var timeout=setTimeout(function() {
@@ -156,12 +163,16 @@
 		});
 	};
 
-	Promise.dumb=function () {
+	Promise.dumb=Promise.never=function() {
 		return new Promise(function(success, error) {});
 	};
 
-	Promise.sure=function () {
-		return new Promise(function(success, error) { success(); });
+	Promise.sure=Promise.fullfill=function(value) {
+		return new Promise(function(success, error) { success(value); });
+	};
+
+	Promise.reject=function(error) {
+		return new Promise(function(success, error) { error(error); });
 	};
 
 return Promise;
