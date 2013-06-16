@@ -1,0 +1,25 @@
+<html>
+	<head><title>Test</title></head>
+	<body>
+		<script type="text/javascript" src="../Promise.js"></script>
+		<script type="text/javascript">
+			var d=Promise.elapsed(1000);
+			d.then(function(){
+				console.log('Then 1');
+			});
+			console.log(d);
+			var tree=Promise.any(
+				d.then(function(){
+					console.log('Then 2');
+				}),
+				Promise.all(Promise.sure(),d.then(function(){
+					console.log('Then 3');
+				})),
+				Promise.dumb()
+			).then(function() {
+				console.log('done',d);
+			});
+			console.log(tree);
+		</script>
+	</body>
+</html>

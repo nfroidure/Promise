@@ -19,39 +19,51 @@
 })(this, 'Promise', [], function () {
 
 	// Promise constructor
-	var AWAIT=0, SUCCESS=1, FAIL=-1;
+	var AWAIT=0, SUCCESS=1, FAIL=-1, DISPOSED=2;
 	function Promise(logic) {
 		var promise=this;
 		promise.solved=AWAIT;
+		promise.successCallbacks=[];
+		promise.failCallbacks=[];
+		promise.progressCallbacks=[];
 		var success=function (value) {
 			if(AWAIT!==promise.solved)
 				return;
 			promise.solved=SUCCESS;
 			promise.value=value;
-			if(promise.successCallback)
-				promise.successCallback(value);
+			while(promise.successCallbacks.length&&!(promise.solved&DISPOSED))
+				promise.successCallbacks.shift()(value);
 		};
 		var fail=function (error) {
 			if(AWAIT!==promise.solved)
 				return;
 			promise.solved=FAIL;
 			promise.error=error;
-			if(promise.failCallback)
-				promise.failCallback(error);
+			while(promise.failCallbacks.length&&!(promise.solved&DISPOSED))
+				promise.failCallbacks.shift()(error);
 		};
 		var progress=function (value) {
 			if(AWAIT!==promise.solved)
 				return;
-			if(promise.progressCallback)
-				promise.progressCallback(error);
+			for(var i=0, j=promise.progressCallbacks.length; i<j; i++)
+				promise.progressCallbacks[i](value);
 		};
-		promise.dispose=logic(success, fail, progress);
+		var dispose=logic(success, fail, progress);
+		promise.dispose=function() {
+			if(!(promise.solved&DISPOSED)) {
+				dispose&&dispose();
+				promise.successCallbacks=[];
+				promise.failCallbacks=[];
+				promise.progressCallbacks=[];
+			}
+			promise.solved=DISPOSED;
+		}
 	}
 	
 	Promise.prototype.then = function(success, fail, progress) {
 		var thenSuccess, thenFail, thenProgress, returnValue, promise=this;
 		var thenDispose=function() {
-			promise.solved===AWAIT&&promise.dispose&&promise.dispose();
+			promise.dispose();
 		;}
 		var thenPromise=new Promise(function(success,fail,progress) {
 			thenSuccess=success;
@@ -75,9 +87,9 @@
 				returnValue.error:returnValue);
 		};
 		if(AWAIT===this.solved) {
-			this.successCallback=successLogic;
-			this.failCallback=failLogic;
-			this.progressCallback=progress;
+			this.successCallbacks.push(successLogic);
+			this.failCallbacks.push(failLogic);
+			this.progressCallbacks.push(progress);
 		} else if(SUCCESS===this.solved) {
 			setTimeout(successLogic,0);
 		} else {
@@ -102,7 +114,7 @@
 		return new Promise(function(successCallback,errorCallback) {
 			var promiseDispose=function() {
 				promises.forEach(function(p) {
-					AWAIT===p.solved&&p.dispose&&p.dispose();
+					AWAIT===p.solved&&p.dispose();
 				});
 			};
 			var promiseSuccess=function(promise,index) {
@@ -110,8 +122,10 @@
 					if(solved<promises.length) {
 						returnValues[index]=value;
 						solved++;
-						if(solved==n)
+						if(solved==n){
+							promiseDispose();
 							successCallback(returnValues);
+						}
 					}
 				}
 			};
@@ -120,6 +134,7 @@
 					rejected++;
 					returnErrors[index]=error;
 					if(solved+rejected==promises.length) {
+						promiseDispose();
 						errorCallback(returnErrors);
 					}
 				}
@@ -152,11 +167,11 @@
 			});
 	};
 
-	Promise.seq=fucntion(){
+	Promise.seq=function(){
 		if(arguments.length<2)
 			throw Error('Promise.seq must have at least 2 Promises as arguments.');
 		var lastPromise=arguments[0];
-		for(var i=1, j=arguments.length, i<j; i++;) {
+		for(var i=1, j=arguments.length; i<j; i++) {
 			lastPromise.then(function() {
 				return arguments[i];
 			});
@@ -172,7 +187,7 @@
 			var timeout=setTimeout(function() {
 				success(Date.now()-timestamp);
 			},time);
-			return function() { clearTimeout(timeout); };
+			return function() { clearTimeout(timeout); };
 		});
 	};
 
