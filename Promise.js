@@ -50,13 +50,14 @@
 		};
 		var dispose=logic(success, fail, progress);
 		promise.dispose=function() {
-			if(!(promise.solved&DISPOSED)) {
+			if(promise.solved===AWAIT) {
 				dispose&&dispose();
 				promise.successCallbacks=[];
 				promise.failCallbacks=[];
 				promise.progressCallbacks=[];
+				promise.error=promise.value=null;
+				promise.solved=DISPOSED;
 			}
-			promise.solved=DISPOSED;
 		}
 	}
 	
@@ -72,6 +73,8 @@
 			return thenDispose;
 		});
 		var successLogic=function() {
+			if(AWAIT!==thenPromise.solved)
+				return;
 			if(success)
 				returnValue=success(promise.value);
 			if(returnValue instanceof Promise) {
@@ -81,6 +84,8 @@
 			}
 		};
 		var failLogic=function() {
+			if(AWAIT!==thenPromise.solved)
+				return;
 			if(fail)
 				returnValue=fail(promise.error);
 			thenFail&&thenFail(returnValue&&returnValue.error?
@@ -92,7 +97,7 @@
 			this.progressCallbacks.push(progress);
 		} else if(SUCCESS===this.solved) {
 			setTimeout(successLogic,0);
-		} else {
+		} else if(FAIL===this.solved) {
 			setTimeout(failLogic,0);
 		}
 		return thenPromise;

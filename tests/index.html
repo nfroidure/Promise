@@ -1,19 +1,20 @@
 <html>
 	<head><title>Test</title></head>
 	<body>
+		<p>Open the console</p>
 		<script type="text/javascript" src="../Promise.js"></script>
 		<script type="text/javascript">
 			var d=Promise.elapsed(1000);
 			d.then(function(){
-				console.log('Then 1');
+				console.log('Then 1 : First executed');
 			});
 			console.log(d);
 			var tree=Promise.any(
 				d.then(function(){
-					console.log('Then 2');
+					console.log('Then 2 : Executed then');
 				}),
 				Promise.all(Promise.sure(),d.then(function(){
-					console.log('Then 3');
+					console.log('Then 3 : Never executed');
 				})),
 				Promise.dumb()
 			).then(function() {
