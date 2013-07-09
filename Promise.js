@@ -35,7 +35,7 @@
 				promise.successCallbacks.shift()(value);
 		};
 		var fail=function (error) {
-			if(AWAIT!==promise.solved)
+			if(DISPOSED===promise.solved)
 				return;
 			promise.solved=FAIL;
 			promise.error=error;
@@ -43,7 +43,7 @@
 				promise.failCallbacks.shift()(error);
 		};
 		var progress=function (value) {
-			if(AWAIT!==promise.solved)
+			if(DISPOSED===promise.solved)
 				return;
 			for(var i=0, j=promise.progressCallbacks.length; i<j; i++)
 				promise.progressCallbacks[i](value);
@@ -94,7 +94,7 @@
 		if(AWAIT===this.solved) {
 			this.successCallbacks.push(successLogic);
 			this.failCallbacks.push(failLogic);
-			this.progressCallbacks.push(progress);
+			progress&&this.progressCallbacks.push(progress);
 		} else if(SUCCESS===this.solved) {
 			setTimeout(successLogic,0);
 		} else if(FAIL===this.solved) {

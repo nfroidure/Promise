@@ -1,22 +1,7 @@
-// UMD stuff : Browser + RequireJS + Node
-(function (root, moduleName, deps, factory) {
-	if (typeof exports === 'object') {
-	// Node. Does not work with strict CommonJS, but
-	// only CommonJS-like enviroments that support module.exports,
-	// like Node.
-	module.exports = factory.apply(root,deps.map(function(dep) {
-		return require(dep);
-	}));
-	} else if (typeof define === 'function' && define.amd) {
-		// AMD. Register as a 'moduleName' named module.
-		define(deps, factory);
-	} else {
-		// Browser globals
-		root[moduleName] = factory.apply(root,deps.map(function(dep) {
-			return root[dep];
-		}));
-	}
-})(this, 'WebSocketPromise', ['./../Promise'], function (Promise) {
+// AMD + Global: r.js compatible
+// Use START + END markers to keep module content only
+(function(root,define){ define(['./../Promise'], function(Promise) {
+// START: Module logic start
 
 	// WebSocketPromise constructor
 	function WebSocketPromise(protocol,hostname,port) {
@@ -91,6 +76,16 @@
 		});
 	};
 
+// END: Module logic end
+
 	return WebSocketPromise;
 
-});
+});})(this,typeof define === 'function' && define.amd ? define : function (name, deps, factory) {
+	var root=this;
+	if(typeof name === 'object') {
+		factory=deps; deps=name; name='WebSocketPromise';
+	}
+	this[name.substring(name.lastIndexOf('/')+1)]=factory.apply(this, deps.map(function(dep){
+		return root[dep.substring(dep.lastIndexOf('/')+1)];
+	}));
+}.bind(this));
