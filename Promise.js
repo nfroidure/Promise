@@ -1,31 +1,21 @@
-// UMD stuff : Browser + RequireJS + Node
-(function (root, moduleName, deps, factory) {
-	if (typeof exports === 'object') {
-	// Node. Does not work with strict CommonJS, but
-	// only CommonJS-like enviroments that support module.exports,
-	// like Node.
-	module.exports = factory.apply(root,deps.map(function(dep) {
-		return require(dep);
-	}));
-	} else if (typeof define === 'function' && define.amd) {
-		// AMD. Register as a 'moduleName' named module.
-		define(deps, factory);
-	} else {
-		// Browser globals
-		root[moduleName] = factory.apply(root,deps.map(function(dep) {
-			return root[dep];
-		}));
-	}
-})(this, 'Promise', [], function () {
+// AMD + global + node : You can use this object by inserting a script
+// or using an AMD loader (like RequireJS) or using NodeJS require function
+(function(root,define){ define([], function() {
+// START: Module logic start
+
+	// Constants
+	var AWAIT=0, SUCCESS=1, FAIL=-1, DISPOSED=2;
 
 	// Promise constructor
-	var AWAIT=0, SUCCESS=1, FAIL=-1, DISPOSED=2;
 	function Promise(logic) {
 		var promise=this;
+		// Initialise the state
 		promise.solved=AWAIT;
+		// Prepare callbacks registration
 		promise.successCallbacks=[];
 		promise.failCallbacks=[];
 		promise.progressCallbacks=[];
+		// called by the resover if the promise fullfills
 		var success=function (value) {
 			if(AWAIT!==promise.solved)
 				return;
@@ -34,6 +24,7 @@
 			while(promise.successCallbacks.length&&!(promise.solved&DISPOSED))
 				promise.successCallbacks.shift()(value);
 		};
+		// called by the resover if the promise fails
 		var fail=function (error) {
 			if(DISPOSED===promise.solved)
 				return;
@@ -42,13 +33,16 @@
 			while(promise.failCallbacks.length&&!(promise.solved&DISPOSED))
 				promise.failCallbacks.shift()(error);
 		};
+		// called by the resover when the fullfill progress
 		var progress=function (value) {
 			if(DISPOSED===promise.solved)
 				return;
 			for(var i=0, j=promise.progressCallbacks.length; i<j; i++)
 				promise.progressCallbacks[i](value);
 		};
+		// Executins the promise logic
 		var dispose=logic(success, fail, progress);
+		// Creating the dispose method
 		promise.dispose=function() {
 			if(promise.solved===AWAIT) {
 				dispose&&dispose();
@@ -104,6 +98,8 @@
 	};
 
 	// Promise compositions
+
+	// Creates a promise fullfilled when 'n' of the promises given are
 	Promise.some=function(n) {
 		if((!n)||(n<0))
 			throw Error('n must be superior or equal to 0');
@@ -152,6 +148,7 @@
 		});
 	};
 
+	// Creates a promise fullfilled when each promises given are
 	Promise.all=Promise.every=function() {
 		if(arguments.length<2)
 			throw Error('Promise.all must have at least 2 Promises as arguments.');
@@ -159,6 +156,8 @@
 			.concat(Array.prototype.slice.call(arguments,0)));
 	};
 
+
+	// Creates a promise fullfilled when one of the given promises is
 	Promise.any=function() {
 		return Promise.some.apply(this,[1]
 			.concat(Array.prototype.slice.call(arguments,0)))
@@ -172,6 +171,7 @@
 			});
 	};
 
+	// Chain promises to resolve sequentially
 	Promise.seq=function(){
 		if(arguments.length<2)
 			throw Error('Promise.seq must have at least 2 Promises as arguments.');
@@ -186,6 +186,8 @@
 	}
 
 	// Promise generators
+
+	// Creates a promise fullfilled after 'time' seconds
 	Promise.elapsed=function(time) {
 		return new Promise(function(success, error) {
 			var timestamp=Date.now();
@@ -196,17 +198,63 @@
 		});
 	};
 
+	// Creates a never fullfilled promise
 	Promise.dumb=Promise.never=function() {
 		return new Promise(function(success, error) {});
 	};
 
-	Promise.sure=Promise.fullfill=function(value) {
-		return new Promise(function(success, error) { success(value); });
+	// Creates a systematically fullfilled promise
+	Promise.sure=Promise.fullfill=function(value, async) {
+		return new Promise(function(success, error) {
+			if(async) {
+				setTimeout(function(){
+					success(value);
+				},0)
+			} else {
+				success(value);
+			}
+		});
 	};
 
-	Promise.reject=function(error) {
-		return new Promise(function(success, error) { error(error); });
+	// Creates a systematically rejected promise
+	Promise.reject=function(error, async) {
+		return new Promise(function(success, error) {
+			if(async) {
+				setTimeout(function(){
+					error(error);
+				},0)
+			} else {
+				error(error);
+			}
+		});
 	};
+
+// END: Module logic end
 
 return Promise;
-});
+
+});})(this,typeof define === 'function' && define.amd ?
+	// AMD
+	define :
+	// NodeJS
+	(typeof exports === 'object'?function (name, deps, factory) {
+		var root=this;
+		if(typeof name === 'object') {
+			factory=deps; deps=name;
+		}
+		module.exports=factory.apply(this, deps.map(function(dep){
+			return require(dep);
+		}));
+	}:
+	// Global
+	function (name, deps, factory) {
+		var root=this;
+		if(typeof name === 'object') {
+			factory=deps; deps=name;
+		}
+		this.Promise=factory.apply(this, deps.map(function(dep){
+			return root[dep.substring(dep.lastIndexOf('/')+1)];
+		}));
+	}.bind(this)
+	)
+);
