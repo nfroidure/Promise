@@ -23,6 +23,9 @@
 			promise.value=value;
 			while(promise.successCallbacks.length&&!(promise.solved&DISPOSED))
 				promise.successCallbacks.shift()(value);
+			// empty other callbacks
+			promise.failCallbacks=[];
+			promise.progressCallbacks=[];
 		};
 		// called by the resover if the promise fails
 		var fail=function (error) {
@@ -32,6 +35,9 @@
 			promise.error=error;
 			while(promise.failCallbacks.length&&!(promise.solved&DISPOSED))
 				promise.failCallbacks.shift()(error);
+			// empty other callbacks
+			promise.successCallbacks=[];
+			promise.progressCallbacks=[];
 		};
 		// called by the resover when the fullfill progress
 		var progress=function (value) {
