@@ -10,18 +10,18 @@
 	function Promise(logic) {
 		var promise=this;
 		// Initialise the state
-		promise.solved=AWAIT;
+		promise.status=AWAIT;
 		// Prepare callbacks registration
 		promise.successCallbacks=[];
 		promise.failCallbacks=[];
 		promise.progressCallbacks=[];
 		// called by the resover if the promise fullfills
 		var success=function (value) {
-			if(AWAIT!==promise.solved)
+			if(AWAIT!==promise.status)
 				return;
-			promise.solved=SUCCESS;
+			promise.status=SUCCESS;
 			promise.value=value;
-			while(promise.successCallbacks.length&&!(promise.solved&DISPOSED))
+			while(promise.successCallbacks.length&&!(promise.status&DISPOSED))
 				promise.successCallbacks.shift()(value);
 			// empty other callbacks
 			promise.failCallbacks=[];
@@ -29,11 +29,11 @@
 		};
 		// called by the resover if the promise fails
 		var fail=function (error) {
-			if(DISPOSED===promise.solved)
+			if(DISPOSED===promise.status)
 				return;
-			promise.solved=FAIL;
+			promise.status=FAIL;
 			promise.error=error;
-			while(promise.failCallbacks.length&&!(promise.solved&DISPOSED))
+			while(promise.failCallbacks.length&&!(promise.status&DISPOSED))
 				promise.failCallbacks.shift()(error);
 			// empty other callbacks
 			promise.successCallbacks=[];
@@ -41,7 +41,7 @@
 		};
 		// called by the resover when the fullfill progress
 		var progress=function (value) {
-			if(DISPOSED===promise.solved)
+			if(DISPOSED===promise.status)
 				return;
 			for(var i=0, j=promise.progressCallbacks.length; i<j; i++)
 				promise.progressCallbacks[i](value);
@@ -50,13 +50,13 @@
 		var dispose=logic(success, fail, progress);
 		// Creating the dispose method
 		promise.dispose=function() {
-			if(promise.solved===AWAIT) {
+			if(promise.status===AWAIT) {
 				dispose&&dispose();
 				promise.successCallbacks=[];
 				promise.failCallbacks=[];
 				promise.progressCallbacks=[];
 				promise.error=promise.value=null;
-				promise.solved=DISPOSED;
+				promise.status=DISPOSED;
 			}
 		}
 	}
@@ -73,7 +73,7 @@
 			return thenDispose;
 		});
 		var successLogic=function() {
-			if(AWAIT!==thenPromise.solved)
+			if(AWAIT!==thenPromise.status)
 				return;
 			if(success)
 				returnValue=success(promise.value);
@@ -84,20 +84,20 @@
 			}
 		};
 		var failLogic=function() {
-			if(AWAIT!==thenPromise.solved)
+			if(AWAIT!==thenPromise.status)
 				return;
 			if(fail)
 				returnValue=fail(promise.error);
 			thenFail&&thenFail(returnValue&&returnValue.error?
 				returnValue.error:returnValue);
 		};
-		if(AWAIT===this.solved) {
+		if(AWAIT===this.status) {
 			this.successCallbacks.push(successLogic);
 			this.failCallbacks.push(failLogic);
 			progress&&this.progressCallbacks.push(progress);
-		} else if(SUCCESS===this.solved) {
+		} else if(SUCCESS===this.status) {
 			setTimeout(successLogic,0);
-		} else if(FAIL===this.solved) {
+		} else if(FAIL===this.status) {
 			setTimeout(failLogic,0);
 		}
 		return thenPromise;
@@ -114,22 +114,22 @@
 		if(n>arguments.length-1)
 			n=arguments.length-1;
 		var promises=Array.prototype.slice.call(arguments,1),
-			solved=0,
+			status=0,
 			rejected=0,
 			returnValues=new Array(promises.length),
 			returnErrors=new Array(promises.length);
 		return new Promise(function(successCallback,errorCallback) {
 			var promiseDispose=function() {
 				promises.forEach(function(p) {
-					AWAIT===p.solved&&p.dispose();
+					AWAIT===p.status&&p.dispose();
 				});
 			};
 			var promiseSuccess=function(promise,index) {
 				return function(value) {
-					if(solved<promises.length) {
+					if(status<promises.length) {
 						returnValues[index]=value;
-						solved++;
-						if(solved==n){
+						status++;
+						if(status==n){
 							promiseDispose();
 							successCallback(returnValues);
 						}
@@ -140,7 +140,7 @@
 				return function(error) {
 					rejected++;
 					returnErrors[index]=error;
-					if(solved+rejected==promises.length) {
+					if(status+rejected==promises.length) {
 						promiseDispose();
 						errorCallback(returnErrors);
 					}
