@@ -193,14 +193,25 @@
 
 	// Promise generators
 
-	// Creates a promise fullfilled after 'time' seconds
-	Promise.elapsed=function(time) {
-		return new Promise(function(success, error) {
+	// Creates a promise fullfilled after 'time' milliseconds
+	Promise.elapsed=function(time, progressPace) {
+		return new Promise(function(success, error, progress) {
 			var timestamp=Date.now();
 			var timeout=setTimeout(function() {
+				progress(0);
 				success(Date.now()-timestamp);
 			},time);
-			return function() { clearTimeout(timeout); };
+			if(progressPace) {
+				var n=Math.floor(time/progressPace), progressTimeout;
+				var timeoutProgress=function() {
+					progress(n);
+					if(--n>0) {
+						progressTimeout=setTimeout(timeoutProgress, progressPace);
+					}
+				};
+				progressTimeout=setTimeout(timeoutProgress,0);
+			}
+			return function() { clearTimeout(timeout); clearTimeout(progressTimeout); };
 		});
 	};
 
