@@ -23,7 +23,11 @@
 					error(xhr);
 			};
 			xhr.onerror = error;
-			xhr.send(data);
+			try {
+				xhr.send(data);
+			} catch(e) {
+				error(e);
+			}
 			var dispose=function() {
 				xhr.abort();
 				xhr=xhr.onload=xhr.onprogress=xhr.onerror=null;
