@@ -38,10 +38,10 @@ new EventPromise('click',document).then(function () {
 	});
  
 // Sequential promises
-getEventPromise('keydown',document).then(function () {
-	return getEventPromise('click',document,false,2);
+new EventPromise('keydown',document).then(function () {
+	return new EventPromise('click',document,false,2);
 }).then(function () {
-	return getEventPromise('mousemove',document);
+	return new EventPromise('mousemove',document);
 }).then(function () {
 	console.log('Keydown + click twice + mousemove sequentially')
 });
@@ -57,9 +57,9 @@ Promise.all(
  
 // Promise that one of the promises will be completed
 Promise.any(
-	getEventPromise('click',document),
-	getEventPromise('keyup',document),
-	getEventPromise('mousemove',document)
+	new EventPromise('click',document),
+	new EventPromise('keyup',document),
+	new EventPromise('mousemove',document)
 ).then(function() {
 	console.log('Keyup | click | mousemove')
 });
